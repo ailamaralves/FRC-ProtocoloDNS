@@ -1,4 +1,23 @@
 
+
+/*
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+ | PREFERENCE                                   |
+ +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+ / EXCHANGE                                     /
+ /                                              /
+ +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+Onde:
+PREFERENCE Um inteiro de 16 bits que especifica a preferência dada a
+ este RR entre outros no mesmo proprietário. Valores mais baixos
+ são preferidos.
+EXCHANGE A <domain-name> que especifica um host disposto a agir como
+ uma troca de correio para o nome do proprietário.
+Os registros MX causam processamento de seção adicional do tipo A para o host
+especificado por EXCHANGE. O uso de MX RRs é explicado em detalhes em
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -36,7 +55,7 @@ int main(int argc, char **argv) {
     char buffer_out[BUFFER_LEN];
 
     // Instantiate the socket
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
         perror("Error on client socket creation:");
         return EXIT_FAILURE;
     }
@@ -58,15 +77,26 @@ int main(int argc, char **argv) {
     memset(buffer_in, 0x0, BUFFER_LEN);
     memset(buffer_out, 0x0, BUFFER_LEN);
 
+
     fprintf(stdout, "Say something to the server: ");
     fgets(buffer_out, BUFFER_LEN, stdin);
 
     // Sends the read message to the server through the socket
-    send(sockfd, buffer_out, strlen(buffer_out), 0);
+    if( (send(sockfd, buffer_out, strlen(buffer_out), 0)) < 0){
+        perror("send");
+        close(sockfd);
+        return EXIT_FAILURE;
+    }
 
     // Receives an answer from the server
-    recv(sockfd, buffer_in, BUFFER_LEN, 0);
-    printf("Server answer: %s\n", buffer_in);
+    int trys = 3, answerlen = 1;
+    while (trys-- > 0){
+        answerlen = recv(sockfd, buffer_in, BUFFER_LEN, 0);
+        printf("Server answer: %s\n", buffer_in);
+    }
+
+
+    close(sockfd);
 
     return 0;
 }
