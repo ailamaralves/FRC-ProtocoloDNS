@@ -27,12 +27,12 @@ especificado por EXCHANGE. O uso de MX RRs é explicado em detalhes em
 
 // #include <sys/types.h>
 // #include <sys/socket.h>
-// #include <netinet/in.h>
-// #include <arpa/inet.h>
+
   
 #include <stdlib.h>
 #include <stdio.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <string.h>
@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
   //segundo as recomendaçoes
   //id = rand(), flag = 0100, questions = 0001 e os demais 0000
   srand(time(NULL));
-  rand_id = rand()%256;
+  int rand_id = rand()%256;
 
   header.transaction_ID= htons(rand_id);   
   header.flags = htons(0x0100);        
@@ -119,23 +119,16 @@ int main(int argc, char **argv) {
 
   //a.com.br 1a3com2br a a. as.com
   int count;
-  char domain_name[hostlen + 2];
-  for(int i = 0; i < hostlen; i++){
-    for(count = 0; argv[1][i] != '.' || argv[1][i] != '\0'; i++ count++);
-    domain_name[i - count] = count;
-    strncat(domain_name, argv[1] + (i - count + 1), count);
-  }
-
-  int count;
   char* domain_name = calloc(hostlen + 2, sizeof(char));
   for(int i = 0; i < hostlen; i++){
-    for(count = 0; host[i] != '.' && i < hostlen; i++, count++); 
+    for(count = 0; argv[1][i] != '.' && i < hostlen; i++, count++); 
     domain_name[i - count] = count;
-    strncat(domain_name, host + (i - count), count);
+    strncat(domain_name, argv[1] + (i - count), count);
   }
   for(int i = 0; i < hostlen+2; i++){
     printf("%0x ", domain_name[i]);
   }
+  printf("\n");
 
   struct query queries;
   queries.name = calloc(hostlen + 2, sizeof(char));
@@ -144,10 +137,8 @@ int main(int argc, char **argv) {
   queries.qclass = htons(IN);
 
 
-
-
   // Connection attempt
-  if (connect(sockfd, (struct sockaddr*) &server, len) == -1) {
+  if (connect(sockfd, (struct sockaddr*) &server, sizeof(server)) == -1) {
     perror("Can't connect to server");
     return EXIT_FAILURE;
   }
@@ -160,8 +151,8 @@ int main(int argc, char **argv) {
   fprintf(stdout, "Say something to the server: ");
   fgets(buffer_out, BUFFER_LEN, stdin);
 
-  memset(buffer_out, header, sizeof(header)*8);
-  memset(buffer_out + (sizeof(header)*8), queries, sizeof(queries)*8);
+  // memset(buffer_out, header, sizeof(header)*8);
+  // memset(buffer_out + (sizeof(header)*8), queries, sizeof(queries)*8);
 
 
   // Sends the read message to the server through the socket
