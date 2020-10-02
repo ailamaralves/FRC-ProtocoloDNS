@@ -151,9 +151,18 @@ int main(int argc, char **argv) {
   fprintf(stdout, "Say something to the server: ");
   fgets(buffer_out, BUFFER_LEN, stdin);
 
+  // unsigned aswrlen = sizeof(header) + (hostlen + 2) + sizeof(queries.qtype) + sizeof(question.qclass);
+  int aswrlen = sizeof(header) + sizeof(queries);
+  unsigned char* data = calloc(aswrlen, 1);
+  memcpy(data, &header, sizeof(header));
+  strcat(data,(const char*) &queries);
+
+  buffer_out = data;
   // memset(buffer_out, header, sizeof(header)*8);
   // memset(buffer_out + (sizeof(header)*8), queries, sizeof(queries)*8);
-
+  for(int i = 0; i < aswrlen; i++){
+    printf("%0x ", data[i]);
+  }
 
   // Sends the read message to the server through the socket
   if( (send(sockfd, buffer_out, strlen(buffer_out), 0)) < 0){
