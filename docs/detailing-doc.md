@@ -52,8 +52,8 @@ Rodar:
 
 ## Limitações
 
-Algumas dificuldades foram encontradas no decorrer do projeto, já que era uma área nova de produção para ambos da dupla.  
-Inicialmente foi necessário estudar os documentos disponibilizados pelo professor e fazer algumas pesquisas para se familiarizar melhor com o assunto.
+Algumas dificuldades foram encontradas no decorrer do projeto, já que era uma área nova de produção para ambos da dupla.    
+Inicialmente foi necessário estudar os documentos disponibilizados pelo professor e fazer algumas pesquisas para se familiarizar melhor com o assunto.  
 Outra questão que nos limitou durante o desenvolvimento foi o fato de um dos membros ter tido problema em sua máquina com o GNU/Linux, dificultando na hora de testar e rodar o projeto mas ainda assim com apenas uma máquina para executar deu certo.
 
 ## Referências
