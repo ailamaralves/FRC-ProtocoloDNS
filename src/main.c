@@ -151,15 +151,19 @@ int main(int argc, char **argv) {
   fprintf(stdout, "Say something to the server: ");
   fgets(buffer_out, BUFFER_LEN, stdin);
 
-  unsigned aswrlen = sizeof(header) + (sizeof(domain_name)) + sizeof(queries.qtype) 
-                    + sizeof(queries.qclass);
+  unsigned aswrlen = sizeof(header) + (sizeof(domain_name)) +
+    sizeof(queries.qtype) + sizeof(queries.qclass);
   unsigned char* data = calloc(aswrlen, 1);
   memcpy(data, &header, sizeof(header));
 
   printf ("Answerlen: %d \n", aswrlen);
 
   unsigned char* p = (unsigned char *) (data + sizeof(header));
-  memcpy(p, &queries, sizeof(queries));
+  memcpy(p, domain_name, sizeof(domain_name));
+  p += sizeof(domain_name);
+  memcpy(p, queries.qtype, sizeof(queries.qtype));
+  p += sizeof(queries.qtype);
+  memcpy(p, queries.qclass, sizeof(queries.qclass));
 
   // memset(buffer_out, (int) data, aswrlen);
   for(int i = 0; i < aswrlen; i++){
