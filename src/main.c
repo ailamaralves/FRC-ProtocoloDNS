@@ -151,10 +151,12 @@ int main(int argc, char **argv) {
   fprintf(stdout, "Say something to the server: ");
   fgets(buffer_out, BUFFER_LEN, stdin);
 
-  unsigned aswrlen = sizeof(header) + (hostlen + 2) + sizeof(queries.qtype) + sizeof(queries.qclass);
-  // int aswrlen = sizeof(header) + sizeof(queries);
+  unsigned aswrlen = sizeof(header) + (sizeof(domain_name)) + sizeof(queries.qtype) 
+                    + sizeof(queries.qclass);
   unsigned char* data = calloc(aswrlen, 1);
   memcpy(data, &header, sizeof(header));
+
+  printf ("Answerlen: %d \n", aswrlen);
 
   unsigned char* p = (unsigned char *) (data + sizeof(header));
   memcpy(p, &queries, sizeof(queries));
@@ -173,11 +175,11 @@ int main(int argc, char **argv) {
   }
 
   // Receives an answer from the server
-  int trys = 3, answerlen = 1;
-  while (trys-- > 0){
-    answerlen = recv(sockfd, buffer_in, BUFFER_LEN, 0);
+  // int trys = 3, answerlen = 1;
+  // while (trys-- > 0){
+    recv(sockfd, buffer_in, BUFFER_LEN, 0);
     printf("Server answer: %s\n", buffer_in);
-  }
+  //}
 
   close(sockfd);
 
