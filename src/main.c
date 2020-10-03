@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
   //segundo as recomendaçoes
   //id = rand(), flag = 0100, questions = 0001 e os demais 0000
   srand(time(NULL));
-  unsigned short rand_id =  
+  unsigned short rand_id = rand()%65535;  
 
   header.transaction_ID= htons(rand_id);   
   header.flags = htons(0x0100);        
@@ -148,28 +148,28 @@ int main(int argc, char **argv) {
   memset(buffer_out, 0x0, BUFFER_LEN);
 
 
-  fprintf(stdout, "Say something to the server: ");
-  fgets(buffer_out, BUFFER_LEN, stdin);
-
   unsigned aswrlen = sizeof(header) + (sizeof(domain_name)) +
     sizeof(queries.qtype) + sizeof(queries.qclass);
   unsigned char* data = calloc(aswrlen, 1);
   memcpy(data, &header, sizeof(header));
 
-  printf ("Answerlen: %d \n", aswrlen);
 
-  unsigned char* p = (unsigned char *) (data + sizeof(header));
-  memcpy(p, domain_name, sizeof(domain_name));
-  p += sizeof(domain_name);
-  memcpy(p, queries.qtype, sizeof(queries.qtype));
-  p += sizeof(queries.qtype);
-  memcpy(p, queries.qclass, sizeof(queries.qclass));
+  unsigned char* iterator = (unsigned char *) (data + sizeof(header));
+  memcpy(iterator, domain_name, sizeof(domain_name));
+  iterator += sizeof(domain_name);
+  memcpy(iterator, &queries.qtype, sizeof(queries.qtype));
+  iterator += sizeof(queries.qtype);
+  memcpy(iterator, &queries.qclass, sizeof(queries.qclass));
 
   // memset(buffer_out, (int) data, aswrlen);
   for(int i = 0; i < aswrlen; i++){
     printf("%0x ", data[i]);
   }
   printf("\n");
+
+  // buffer_out = data;
+  // fprintf(stdout, "Say something to the server: ");
+  // fgets(data, BUFFER_LEN, stdin);
 
   // Sends the read message to the server through the socket
   if( (send(sockfd, buffer_out, strlen(buffer_out), 0)) < 0){
