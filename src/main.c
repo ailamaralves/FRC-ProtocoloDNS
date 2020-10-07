@@ -1,34 +1,3 @@
-
-
-/*
-+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
- | PREFERENCE                                   |
- +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
- / EXCHANGE                                     /
- /                                              /
- +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-
-Onde:
-PREFERENCE Um inteiro de 16 bits que especifica a preferência dada a
- este RR entre outros no mesmo proprietário. Valores mais baixos
- são preferidos.
-EXCHANGE A <domain-name> que especifica um host disposto a agir como
- uma troca de correio para o nome do proprietário.
-Os registros MX causam processamento de seção adicional do tipo A para o host
-especificado por EXCHANGE. O uso de MX RRs é explicado em detalhes em
-*/
-
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <unistd.h>
-// #include <string.h>
-// #include <errno.h>
-// #include <stdbool.h>
-
-// #include <sys/types.h>
-// #include <sys/socket.h>
-
-  
 #include <stdlib.h>
 #include <stdio.h>
 #include <netinet/in.h>
@@ -39,12 +8,6 @@ especificado por EXCHANGE. O uso de MX RRs é explicado em detalhes em
 #include <inttypes.h>
 #include <time.h>
  
-#define MX 15
-
-//Function Prototypes
-void ChangetoDnsNameFormat (unsigned char*, char*);
- 
-//DNS header structure
 struct dns_header{
   unsigned short transaction_ID; 
   unsigned short flags;
@@ -151,10 +114,10 @@ int main(int argc, char **argv) {
   unsigned aswrlen = sizeof(header) + (sizeof(domain_name)) +
     sizeof(queries.qtype) + sizeof(queries.qclass);
   unsigned char* data = calloc(aswrlen, 1);
-  memcpy(data, &header, sizeof(header));
+  unsigned char* iterator = (unsigned char *) data;
 
-
-  unsigned char* iterator = (unsigned char *) (data + sizeof(header));
+  memcpy(iterator, &header, sizeof(header));
+  iterator += sizeof(header);
   memcpy(iterator, domain_name, sizeof(domain_name));
   iterator += sizeof(domain_name);
   memcpy(iterator, &queries.qtype, sizeof(queries.qtype));
@@ -172,7 +135,7 @@ int main(int argc, char **argv) {
   // fgets(data, BUFFER_LEN, stdin);
 
   // Sends the read message to the server through the socket
-  if( (send(sockfd, buffer_out, strlen(buffer_out), 0)) < 0){
+  if( (sendto(sockfd, data, strlen(data), 0, (struct sockaddr *) &server), (socklen_t) sizeof(server)) == -1){
     perror("send");
     close(sockfd);
     return EXIT_FAILURE;
@@ -181,8 +144,8 @@ int main(int argc, char **argv) {
   // Receives an answer from the server
   // int trys = 3, answerlen = 1;
   // while (trys-- > 0){
-    recv(sockfd, buffer_in, BUFFER_LEN, 0);
-    printf("Server answer: %s\n", buffer_in);
+    bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, 0, (struct sockaddr *) &address, &length);
+    printf("Server answer: %0x\n", buffer_in);
   //}
 
   close(sockfd);
