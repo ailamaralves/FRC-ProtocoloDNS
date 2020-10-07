@@ -131,11 +131,11 @@ int main(int argc, char **argv) {
   printf("\n");
 
   // buffer_out = data;
-  // fprintf(stdout, "Say something to the server: ");
-  // fgets(data, BUFFER_LEN, stdin);
+  fprintf(stdout, "Say something to the server: ");
+  fgets(buffer_out, BUFFER_LEN, stdin);
 
   // Sends the read message to the server through the socket
-  if( (sendto(sockfd, data, strlen(data), 0, (struct sockaddr *) &server), (socklen_t) sizeof(server)) == -1){
+  if (sendto(sockfd, data, strlen(data), 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
     perror("send");
     close(sockfd);
     return EXIT_FAILURE;
@@ -144,8 +144,9 @@ int main(int argc, char **argv) {
   // Receives an answer from the server
   // int trys = 3, answerlen = 1;
   // while (trys-- > 0){
-    bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, 0, (struct sockaddr *) &address, &length);
-    printf("Server answer: %0x\n", buffer_in);
+    unsigned int bytes, length;
+    bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, 0, (struct sockaddr *) &server, &length);
+    printf("Server answer: %s\n", buffer_in);
   //}
 
   close(sockfd);
