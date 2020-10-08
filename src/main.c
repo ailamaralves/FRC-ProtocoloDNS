@@ -23,6 +23,20 @@ struct query{
   unsigned short qclass;
 };
 
+struct answer{
+  unsigned short name;
+  unsigned short atype;
+  unsigned short aclass;
+  unsigned int time_to_live;
+  unsigned short datalength;
+  unsigned short preference;
+  struct mail_exchange mx;
+}
+
+struct mail_exchange{
+  char* name;
+  unsigned char cocat[2];
+}
 
 #define DNS_PORT 53
 #define NO_ATTEMPS 3
@@ -97,13 +111,6 @@ int main(int argc, char **argv) {
   queries.qtype = htons(MX);
   queries.qclass = htons(IN);
 
-
-  // Connection attempt
-  // if (connect(sockfd, (struct sockaddr*) &server, sizeof(server)) == -1) {
-  // perror("Can't connect to server");
-  // return EXIT_FAILURE;
-  //}
-
   // Zeroing the buffers
   memset(buffer_in, 0x0, BUFFER_LEN);
   memset(buffer_out, 0x0, BUFFER_LEN);
@@ -118,6 +125,7 @@ int main(int argc, char **argv) {
   iterator += sizeof(header);
   memcpy(iterator, domain_name, sizeof(domain_name));
   iterator += sizeof(domain_name);
+  free(domain_name);
   memcpy(iterator, &queries.qtype, sizeof(queries.qtype));
   iterator += sizeof(queries.qtype);
   memcpy(iterator, &queries.qclass, sizeof(queries.qclass));
@@ -137,18 +145,59 @@ int main(int argc, char **argv) {
     close(sockfd);
     return EXIT_FAILURE;
   }
-
+  free(data);
   printf("Chega aqui carai %d\n", resp);
 
   sleep(2);
   // Receives an answer from the server
-    unsigned int bytes, length;
-    bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
+  unsigned int bytes, length;
+  bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
 
-    printf("Server answer: %d\n", bytes);
-    for(int i = 0; i < bytes; i++){
-      printf("%0x\n", buffer_in[i]);
+  printf("Server answer: %d\n", bytes);
+  for(int i = 0; i < bytes; i++){
+    printf("%0x\n", buffer_in[i]);
+  }
+
+
+/*
+  a0 24 81 80 00 01 00 01 00 00 00 00 [03 75 6e 62 02 62 72 00] 00 0f 00 01 
+  |c0 0c, 00 0f, 00 01, 00 00 34 dd, *00 26*, 00 00, [06 75 6e 62 2d 62 72 04 6d 61 69 6c 0a 70 
+  72 6f 74 65 63 74 69 6f 6e 07 6f 75 74 6c 6f 6f 6b 03 63 6f 6d 00]|
+
+  1b fd 81 80 00 01 00 05 00 00 00 00 </>[06 67 6f 6f 67 6c 65 03 63 6f 6d 00] 00 0f 00 01 
+  |c0 0c 00 0f 00 01 00 00 01 c3 *00 11* 00 1e [04 61 6c 74 32 <.>05 61 73 70 6d 78 01 6c c0 0c| 
+  |c0 0c 00 0f 00 01 00 00 01 c3 *00 09* 00 28 [04 61 6c 74 33 c0 2f| 
+  |c0 0c 00 0f 00 01 00 00 01 c3 *00 04* 00 0a [c0 2f|
+  |c0 0c 00 0f 00 01 00 00 01 c3 *00 09* 00 32 [04 61 6c 74 34 c0 2f| 
+  |c0 0c 00 0f 00 01 00 00 01 c3 *00 09* 00 14 [04 61 6c 74 31 c0 2f|
+
+  * * = numero de bites na frente
+  [ ] = ascii
+  | | = struct answer
+  </> = c0 0c
+  <.> = c0 2f
+*/
+  iterator = buffer_in;
+  iterator += sizeof(header);
+  int name_size = 0;
+  for(; *(iterator++) == 0; name_size++) ;
+  iterator -= name_size;
+  domain_name = calloc(name_size - 2, sizeof(char));
+  {
+    int i = 0;
+    while (1){
+      i++;
+      for(int atual = --i; i <= iterator[i] + atual && i < name_size; i++){
+        printf("i: %d\n", i);
+        domain_name[i] = iterator[i+1];
+      }
+      if (i+1 >= name_size) break;
+      domain_name[i-1] = '.';
     }
+  }
+
+  printf("%s <>", domain_name);
+  printf("\n");
 
   close(sockfd);
 
