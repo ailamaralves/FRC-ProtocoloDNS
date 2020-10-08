@@ -251,20 +251,22 @@ int main(int argc, char **argv) {
     memcpy(&answers[k].preference, iterator, 2);
     iterator += 2;
 
-    answers[k].mailx.name = calloc((unsigned short)answers[k].datalength - 2, sizeof(char));
+    unsigned short mxlength = (unsigned short)answers[k].datalength[0] * 256;
+    mxlength += (unsigned short)answers[k].datalength[1] - 2; //16^2 = 256
+    answers[k].mailx.name = calloc(mxlength, sizeof(char));
 
     {
       int i = 0;
       while (1){
         i++;
-        for(int atual = --i; i <= iterator[i] + atual && i < (unsigned short)answers[k].datalength - 2; i++){
+        for(int atual = --i; i <= iterator[i] + atual && i < mxlength; i++){
           printf("i: %d ", i);
           answers[k].mailx.name[i] = iterator[i+1];
         }
-        if (i+1 >= (unsigned short)answers[k].datalength - 2) break;
+        if (i+1 >= mxlength) break;
         answers[k].mailx.name[i-1] = '.';
       }
-      answers[k].mailx.name[(unsigned short)answers[k].datalength - 3] = '\0';
+      answers[k].mailx.name[mxlength - 1] = '\0';
     }
   }
 
