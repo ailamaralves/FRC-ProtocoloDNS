@@ -178,10 +178,13 @@ int main(int argc, char **argv) {
   <.> = c0 2f
 */
   iterator = buffer_in;
-  iterator += sizeof(header);
+  iterator += sizeof(struct dns_header);
   int name_size = 0;
-  for(; *(iterator++) == 0; name_size++) ;
-  iterator -= name_size;
+  for(; *iterator == 0; name_size++, iterator++) ;
+  // iterator -= name_size;
+  iterator += sizeof(struct query) - sizeof(char*);
+  printf("%0x", iterator[0]);
+
   domain_name = calloc(name_size - 2, sizeof(char));
   {
     int i = 0;
@@ -196,7 +199,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  printf("%s <>", domain_name);
+  printf("%s <>", argv[1]);
   printf("\n");
 
   close(sockfd);
