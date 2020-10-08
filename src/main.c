@@ -37,8 +37,6 @@ struct query{
 
 int main(int argc, char **argv) {
 
-
-
   // Socket struct
   struct sockaddr_in server;
 
@@ -48,7 +46,7 @@ int main(int argc, char **argv) {
   for(hostlen = 0; argv[1][hostlen] != '\0'; hostlen++);
 
   // Receive buffer
-  char buffer_in[BUFFER_LEN];
+  char buffer_in [BUFFER_LEN];
   // Send buffer
   char buffer_out[BUFFER_LEN];
 
@@ -101,10 +99,10 @@ int main(int argc, char **argv) {
 
 
   // Connection attempt
-  if (connect(sockfd, (struct sockaddr*) &server, sizeof(server)) == -1) {
-    perror("Can't connect to server");
-    return EXIT_FAILURE;
-  }
+  // if (connect(sockfd, (struct sockaddr*) &server, sizeof(server)) == -1) {
+  // perror("Can't connect to server");
+  // return EXIT_FAILURE;
+  //}
 
   // Zeroing the buffers
   memset(buffer_in, 0x0, BUFFER_LEN);
@@ -131,23 +129,26 @@ int main(int argc, char **argv) {
   printf("\n");
 
   // buffer_out = data;
-  fprintf(stdout, "Say something to the server: ");
-  fgets(buffer_out, BUFFER_LEN, stdin);
 
   // Sends the read message to the server through the socket
-  if (sendto(sockfd, data, strlen(data), 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
+  int resp;
+  if (resp = sendto(sockfd, data, aswrlen, 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
     perror("send");
     close(sockfd);
     return EXIT_FAILURE;
   }
 
+  printf("Chega aqui carai %d\n", resp);
+
+  sleep(2);
   // Receives an answer from the server
-  // int trys = 3, answerlen = 1;
-  // while (trys-- > 0){
     unsigned int bytes, length;
-    bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, 0, (struct sockaddr *) &server, &length);
-    printf("Server answer: %s\n", buffer_in);
-  //}
+    bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
+
+    printf("Server answer: %d\n", bytes);
+    for(int i = 0; i < bytes; i++){
+      printf("%0x\n", buffer_in[i]);
+    }
 
   close(sockfd);
 
