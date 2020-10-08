@@ -32,7 +32,7 @@ struct answer{
   unsigned short name;
   unsigned short atype;
   unsigned short aclass;
-  unsigned int time_to_live;
+  unsigned short time_to_live[2];
   unsigned short datalength;
   unsigned short preference;
   struct mail_exchange mailx;
@@ -190,7 +190,20 @@ int main(int argc, char **argv) {
   | | = struct answer
   </> = c0 0c
   <.> = c0 2f
+
+
+  struct answer{
+  unsigned short name;
+  unsigned short atype;
+  unsigned short aclass;
+  unsigned int time_to_live;
+  unsigned short datalength;
+  unsigned short preference;
+  struct mail_exchange mailx;
+};
 */
+
+  n_responses = *(buffer_in+7);
   iterator = (unsigned char*)buffer_in;
   iterator += sizeof(struct dns_header);
   int name_size = 0;
@@ -200,10 +213,9 @@ int main(int argc, char **argv) {
   for(; *iterator != 0; name_size++, iterator++) ;
 
   iterator -= name_size;
-  //iterator += sizeof(struct query) - sizeof(char*);
-  printf("O iterator é: %0x\n", *(iterator));
-  printf("Name size: %d\n", name_size);
-  domain_name = calloc(name_size - 1, sizeof(char));
+  printf("O iterator é: %0x\n", *(iterator)); // 3
+  printf("Name size: %d\n", name_size); // 7
+  domain_name = calloc(name_size, sizeof(char));
 
   {
     int i = 0;
@@ -216,10 +228,45 @@ int main(int argc, char **argv) {
       if (i+1 >= name_size) break;
       domain_name[i-1] = '.';
     }
-    domain_name[i] = '\0';
+    domain_name[name_size-1] = '\0';
   }
 
-  printf("%s <>", domain_name);
+  iterator += sizeof(struct query) - sizeof(char*);
+  struct answer answers[n_responses];
+  for(int k = 0; k < n_responses; k++){
+    memcpy(answers.name, iterator, 2);
+    iterator += 2;
+    memcpy(answers.atype, iterator, 2);
+    iterator += 2;
+    memcpy(answers.aclass, iterator, 2);
+    iterator += 2;
+    memcpy(answers.time_to_live, iterator, 4);
+    iterator += 4;
+    memcpy(answers.datalength, iterator, 2);
+    iterator += 2;
+    memcpy(answers.preference, iterator, 2);
+    iterator += 2;
+
+    answers.mailx.name = calloc(answers.datalength - 2, sizeof(char));
+
+    {
+      int i = 0;
+      while (1){
+        i++;
+        for(int atual = --i; i <= iterator[i] + atual && i < answers.datalength - 2; i++){
+          printf("i: %d\n", i);
+          answers.mailx.name[i] = iterator[i+1];
+        }
+        if (i+1 >= answers.datalength - 2) break;
+        answers.mailx.name[i-1] = '.';
+      }
+      answers.mailx.name[answers.datalength - 3] = '\0';
+    }
+
+
+  }
+
+  printf("%s <> %s", domain_name, answers.mailx.name);
   printf("\n");
 
   close(sockfd);
