@@ -23,6 +23,11 @@ struct query{
   unsigned short qclass;
 };
 
+struct mail_exchange{
+  char* name;
+  unsigned char cocat[2];
+};
+
 struct answer{
   unsigned short name;
   unsigned short atype;
@@ -30,13 +35,9 @@ struct answer{
   unsigned int time_to_live;
   unsigned short datalength;
   unsigned short preference;
-  struct mail_exchange mx;
-}
+  struct mail_exchange mailx;
+};
 
-struct mail_exchange{
-  char* name;
-  unsigned char cocat[2];
-}
 
 #define DNS_PORT 53
 #define NO_ATTEMPS 3
@@ -145,19 +146,32 @@ int main(int argc, char **argv) {
     close(sockfd);
     return EXIT_FAILURE;
   }
-  free(data);
-  printf("Chega aqui carai %d\n", resp);
 
+
+  free(data);
   sleep(2);
+
   // Receives an answer from the server
   unsigned int bytes, length;
   bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
 
   printf("Server answer: %d\n", bytes);
   for(int i = 0; i < bytes; i++){
-    printf("%0x\n", buffer_in[i]);
+    printf("%0x ", buffer_in[i]);
+  }
+  printf("\n");
+
+  if(bytes == -1){
+    close(sockfd);
+    printf("Nao foi possível coletar a entrada MX para %s\n", argv[1]);
+    exit(-1);
   }
 
+  if(bytes == 12){
+    close(sockfd);
+    printf("Dominio %s nao possui entrada MX\n", argv[1]);
+    exit(-1);
+  }
 
 /*
   a0 24 81 80 00 01 00 01 00 00 00 00 [03 75 6e 62 02 62 72 00] 00 0f 00 01 
@@ -177,15 +191,20 @@ int main(int argc, char **argv) {
   </> = c0 0c
   <.> = c0 2f
 */
-  iterator = buffer_in;
+  iterator = (unsigned char*)buffer_in;
   iterator += sizeof(struct dns_header);
   int name_size = 0;
-  for(; *iterator == 0; name_size++, iterator++) ;
-  // iterator -= name_size;
-  iterator += sizeof(struct query) - sizeof(char*);
-  printf("%0x", iterator[0]);
 
-  domain_name = calloc(name_size - 2, sizeof(char));
+  printf("O iterator é: %0x\n", *(iterator));
+
+  for(; *iterator != 0; name_size++, iterator++) ;
+
+  iterator -= name_size;
+  //iterator += sizeof(struct query) - sizeof(char*);
+  printf("O iterator é: %0x\n", *(iterator));
+  printf("Name size: %d\n", name_size);
+  domain_name = calloc(name_size - 1, sizeof(char));
+
   {
     int i = 0;
     while (1){
@@ -197,9 +216,10 @@ int main(int argc, char **argv) {
       if (i+1 >= name_size) break;
       domain_name[i-1] = '.';
     }
+    domain_name[i] = '\0';
   }
 
-  printf("%s <>", argv[1]);
+  printf("%s <>", domain_name);
   printf("\n");
 
   close(sockfd);
