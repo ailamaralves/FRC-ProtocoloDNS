@@ -28,13 +28,23 @@ struct mail_exchange{
   unsigned char cocat[2];
 };
 
+// struct answer{
+//   unsigned char name[2];
+//   unsigned char atype[2];
+//   unsigned char aclass[2];
+//   unsigned char time_to_live[4];
+//   unsigned char datalength[2];
+//   unsigned char preference[2];
+//   struct mail_exchange mailx;
+// };
+
 struct answer{
-  unsigned char name[2];
-  unsigned char atype[2];
-  unsigned char aclass[2];
-  unsigned char time_to_live[4];
-  unsigned char datalength[2];
-  unsigned char preference[2];
+  unsigned short name; 
+  unsigned short atype;
+  unsigned short aclass; 
+  unsigned short time_to_live[2]; 
+  unsigned short datalength; 
+  unsigned short preference;
   struct mail_exchange mailx;
 };
 
@@ -143,11 +153,14 @@ int main(int argc, char **argv) {
   int resp;
   if (resp = sendto(sockfd, data, aswrlen, 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
     perror("send");
+    free(domain_name);
+    free(queries.name);
+    free(data);
     close(sockfd);
     return EXIT_FAILURE;
   }
 
-
+  free(queries.name);
   free(data);
   sleep(2);
 
@@ -204,6 +217,7 @@ int main(int argc, char **argv) {
 */
 
   int n_responses = *(buffer_in+7);
+  int n_responses = *(buffer_in+6)<<4;
   iterator = (unsigned char*)buffer_in;
   iterator += sizeof(struct dns_header);
   int name_size = 0;
@@ -235,26 +249,50 @@ int main(int argc, char **argv) {
   iterator += sizeof(struct query) - sizeof(char*);
   struct answer answers[n_responses];
   for(int k = 0; k < n_responses; k++){
-    memcpy(&answers[k].name, iterator, 2);
+    unsigned char buff[4];
+    memcpy(&buff, iterator, 2);
+    answers[k].name = buff[0]<<4;
+    answers[k].name += buff[1];
     iterator += 2;
     printf("name %s\n", (answers[k].name));
-    memcpy(&answers[k].atype, iterator, 2);
+    memcpy(&buff, iterator, 2);
+    answers[k].atype = buff[0]<<4;
+    answers[k].atype += buff[1];
     iterator += 2;
     printf("atype %s\n", (answers[k].atype));
-    memcpy(&answers[k].aclass, iterator, 2);
+    memcpy(&buff, iterator, 2);
+    answers[k].aclass = buff[0]<<4;
+    answers[k].aclass += buff[1];
     iterator += 2;
     printf("aclass %s\n", (answers[k].aclass));
-    memcpy(&answers[k].time_to_live, iterator, 4);
+    memcpy(&buff, iterator, 4);
+    answers[k].time_to_live[1] = buff[0]<<4;
+    answers[k].time_to_live[1] += buff[1];
+    answers[k].time_to_live[0] = buff[2]<<4;
+    answers[k].time_to_live[0] += buff[3];
     iterator += 4;
-    memcpy(&answers[k].datalength, iterator, 2);
+    memcpy(&buff, iterator, 2);
+    answers[k].datalength = buff[0]<<4;
+    answers[k].datalength += buff[1];
     iterator += 2;
-    memcpy(&answers[k].preference, iterator, 2);
+    memcpy(&buff, iterator, 2);
+    answers[k].preference = buff[0]<<4;
+    answers[k].preference += buff[1];
     iterator += 2;
 
-    unsigned short mxlength = (unsigned short)answers[k].datalength[0] * 256;
-    mxlength += (unsigned short)answers[k].datalength[1] - 2; //16^2 = 256
+    memcpy(&buff, iterator + answers[k].datalength - 4, 2);
+
+    answers[k].mailx.cocat[0] = buff[0];
+    answers[k].mailx.cocat[1] = buff[1];
+
+    int jump = 0;
+    if(answers[k].mailx.cocat[0] == 192){
+      jump = answers[k].mailx.cocat[1];
+    }
+
+    unsigned short mxlength = answers[k].datalength - 2; //16^2 = 256
+
     answers[k].mailx.name = calloc(mxlength, sizeof(char));
-
     {
       int i = 0;
       while (1){
@@ -268,12 +306,15 @@ int main(int argc, char **argv) {
       }
       answers[k].mailx.name[mxlength - 1] = '\0';
     }
+
+    printf("%s <> %s", domain_name, answers[k].mailx.name);
+    printf("\n");
+    free(answers[k].mailx.name);
   }
 
-  printf("%s <> %s", domain_name, answers[0].mailx.name);
-  printf("\n");
-
+  free(domain_name);
   close(sockfd);
+
 
   return 0;
 }
