@@ -111,10 +111,10 @@ int main(int argc, char **argv) {
     domain_name[i - count] = count;
     strncat(domain_name, argv[1] + (i - count), count);
   }
-  for(int i = 0; i < hostlen+2; i++){
-    printf("%0x ", domain_name[i]);
-  }
-  printf("\n");
+  //for(int i = 0; i < hostlen+2; i++){
+  //  printf("%0x ", domain_name[i]);
+  //}
+  //printf("\n");
 
   struct query queries;
   queries.name = calloc(hostlen + 2, sizeof(char));
@@ -142,10 +142,10 @@ int main(int argc, char **argv) {
   memcpy(iterator, &queries.qclass, sizeof(queries.qclass));
 
   // memset(buffer_out, (int) data, aswrlen);
-  for(int i = 0; i < aswrlen; i++){
-    printf("%0x ", data[i]);
-  }
-  printf("\n");
+  //for(int i = 0; i < aswrlen; i++){
+  //  printf("%0x ", data[i]);
+  //}
+  //printf("\n");
 
   // buffer_out = data;
 
@@ -169,10 +169,10 @@ int main(int argc, char **argv) {
   bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
 
   printf("Server answer: %d\n", bytes);
-  for(int i = 0; i < bytes; i++){
-    printf("%0x ", buffer_in[i]);
-  }
-  printf("\n");
+  //for(int i = 0; i < bytes; i++){
+  //  printf("%0x ", buffer_in[i]);
+  //}
+  //printf("\n");
 
   if(bytes == -1){
     close(sockfd);
@@ -217,7 +217,7 @@ int main(int argc, char **argv) {
 */
 
   int n_responses = *(buffer_in+7);
-  int n_responses = *(buffer_in+6)<<4;
+  n_responses += *(buffer_in+6)<<4;
   iterator = (unsigned char*)buffer_in;
   iterator += sizeof(struct dns_header);
   int name_size = 0;
@@ -235,8 +235,7 @@ int main(int argc, char **argv) {
     int i = 0;
     while (1){
       i++;
-      for(int atual = --i; i <= iterator[i] + atual && i < name_size; i++){
-        printf("i: %d\n", i);
+      for(int atual = --i; i <= iterator[i] + atual && i < name_size; i++){        
         domain_name[i] = iterator[i+1];
       }
       if (i+1 >= name_size) break;
@@ -254,17 +253,17 @@ int main(int argc, char **argv) {
     answers[k].name = buff[0]<<4;
     answers[k].name += buff[1];
     iterator += 2;
-    printf("name %s\n", (answers[k].name));
+    printf("Name: %0x\n", (answers[k].name));
     memcpy(&buff, iterator, 2);
     answers[k].atype = buff[0]<<4;
     answers[k].atype += buff[1];
     iterator += 2;
-    printf("atype %s\n", (answers[k].atype));
+    printf("Atype: %0x\n", (answers[k].atype));
     memcpy(&buff, iterator, 2);
     answers[k].aclass = buff[0]<<4;
     answers[k].aclass += buff[1];
     iterator += 2;
-    printf("aclass %s\n", (answers[k].aclass));
+    printf("Aclass: %0x\n", (answers[k].aclass));
     memcpy(&buff, iterator, 4);
     answers[k].time_to_live[1] = buff[0]<<4;
     answers[k].time_to_live[1] += buff[1];
@@ -297,8 +296,7 @@ int main(int argc, char **argv) {
       int i = 0;
       while (1){
         i++;
-        for(int atual = --i; i <= iterator[i] + atual && i < mxlength; i++){
-          printf("i: %d ", i);
+        for(int atual = --i; i <= iterator[i] + atual && i < mxlength; i++){          
           answers[k].mailx.name[i] = iterator[i+1];
         }
         if (i+1 >= mxlength) break;
@@ -306,6 +304,12 @@ int main(int argc, char **argv) {
       }
       answers[k].mailx.name[mxlength - 1] = '\0';
     }
+
+    printf("MX: ");
+    for(int i = 0; i < mxlength; i++){
+    printf("%0x ", answers[k].mailx.name[i]);
+    }
+    printf("\n");
 
     printf("%s <> %s", domain_name, answers[k].mailx.name);
     printf("\n");
