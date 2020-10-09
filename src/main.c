@@ -51,7 +51,7 @@ struct answer{
 
 #define DNS_PORT 53
 #define NO_ATTEMPS 3
-#define BUFFER_LEN 4096
+#define BUFFER_LEN 65536
 #define MX 15
 #define IN 1
 
@@ -150,24 +150,28 @@ int main(int argc, char **argv) {
   // buffer_out = data;
 
   // Sends the read message to the server through the socket
-  int resp;
-  if (resp = sendto(sockfd, data, aswrlen, 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
-    perror("send");
-    free(domain_name);
-    free(queries.name);
-    free(data);
-    close(sockfd);
-    return EXIT_FAILURE;
-  }
 
+  int attemps = NO_ATTEMPS;
+  do{
+
+    int resp;
+    if (resp = sendto(sockfd, data, aswrlen, 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
+      perror("send");
+      free(domain_name);
+      free(queries.name);
+      free(data);
+      close(sockfd);
+      return EXIT_FAILURE;
+    }
+    sleep(2);
+    // Receives an answer from the server
+    unsigned int bytes, length;
+    bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
+
+  }while(bytes == -1 && --attemps > 0 );
+  
   free(queries.name);
   free(data);
-  sleep(2);
-
-  // Receives an answer from the server
-  unsigned int bytes, length;
-  bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
-
   printf("Server answer: %d\n", bytes);
   //for(int i = 0; i < bytes; i++){
   //  printf("%0x ", buffer_in[i]);
@@ -175,12 +179,14 @@ int main(int argc, char **argv) {
   //printf("\n");
 
   if(bytes == -1){
+    free(domain_name);
     close(sockfd);
     printf("Nao foi possível coletar a entrada MX para %s\n", argv[1]);
     exit(-1);
   }
 
   if(bytes == 12){
+    free(domain_name);
     close(sockfd);
     printf("Dominio %s nao possui entrada MX\n", argv[1]);
     exit(-1);
@@ -289,7 +295,7 @@ int main(int argc, char **argv) {
       jump = answers[k].mailx.cocat[1];
     }
 
-    unsigned short mxlength = answers[k].datalength - 2; //16^2 = 256
+    unsigned short mxlength = answers[k].datalength - 3; //16^2 = 256
 
     answers[k].mailx.name = calloc(mxlength, sizeof(char));
     {
