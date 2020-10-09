@@ -28,6 +28,8 @@ Para o desenvolvimento do projeto foram utilizadas as ferramentas listadas na ta
 
 ## Construção da aplicação
 
+Por problemas no início do desenvolvimento, a estrutura do código acabou tendo uma função main monolítica.
+
 O desenvolvimento da aplicação consistiu nos seguintes desafios:
 * Construção e formatação dos dados DNS MX segundo a RFC 1035, Page: 25;
     * Header: ID (2 bytes); Flags (2 bytes); Questions Count (2 bytes); Answer Count (2 bytes); Authority Count (2 bytes); Additional Count (2 bytes).
@@ -40,7 +42,7 @@ O desenvolvimento da aplicação consistiu nos seguintes desafios:
 
 ### Exemplo de mensagem do cliente
 ```
-a0 24, 01 00, 00 01, 00 00, 00 00, 00 00, [03 75 6e 62 02 62 72 00], 00 0f, 00 01
+a0 24 01 00 00 01 00 00 00 00 00 00 03 75 6e 62 02 62 72 00 00 0f 00 01
 
 Header: a0 24, 01 00, 00 01, 00 00, 00 00, 00 00;
 Query: [03 75 6e 62 02 62 72 00], 00 0f, 00 01;
@@ -48,8 +50,7 @@ Query: [03 75 6e 62 02 62 72 00], 00 0f, 00 01;
 
 ### Exemplo de resposta do servidor
 ```
-a0 24 81 80 00 01 00 01 00 00 00 00 [03 75 6e 62 02 62 72 00] 00 0f 00 01 
-|c0 0c, 00 0f, 00 01, 00 00 34 dd, *00 26*, 00 00, [06 75 6e 62 2d 62 72 04 6d 61 69 6c 0a 70 72 6f 74 65 63 74 69 6f 6e 07 6f 75 74 6c 6f 6f 6b 03 63 6f 6d 00]|
+a0 24 81 80 00 01 00 01 00 00 00 00 03 75 6e 62 02 62 72 00 00 0f 00 01 c0 0c 00 0f 00 01 00 00 34 dd 00 26 00 00 06 75 6e 62 2d 62 72 04 6d 61 69 6c 0a 70 72 6f 74 65 63 74 69 6f 6e 07 6f 75 74 6c 6f 6f 6b 03 63 6f 6d 00
 
 Header: a0 24, 81 80, 00 01, 00 01, 00 00, 00 00;
 
@@ -103,6 +104,10 @@ Outra questão que nos limitou durante o desenvolvimento foi o fato de um dos me
 
 * O código só será compilado por um sistema GNU/Linux, pois nenhuma versão do Windows possui as bibliotecas <netinet/in.h>, <arpa/inet.h>, <sys/socket.h>, <unistd.h>.
 * É necessário ter interntet.
+
+## Observações
+
+
 
 ## Referências
 
