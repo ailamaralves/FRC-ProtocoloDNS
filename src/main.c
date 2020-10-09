@@ -232,14 +232,14 @@ int main(int argc, char **argv) {
   domain_name = calloc(name_size, sizeof(char));
 
   {
-    int i = 0;
+    int i = -1;
     while (1){
       i++;
-      for(int atual = --i; i <= iterator[i] + atual && i < name_size; i++){        
+      for(int atual = i; i < iterator[atual] + atual && i < name_size; i++){        
         domain_name[i] = iterator[i+1];
       }
       if (i+1 >= name_size) break;
-      domain_name[i-1] = '.';
+      domain_name[i] = '.';
     }
     domain_name[name_size-1] = '\0';
   }
@@ -293,14 +293,14 @@ int main(int argc, char **argv) {
 
     answers[k].mailx.name = calloc(mxlength, sizeof(char));
     {
-      int i = 0;
+      int i = -1;
       while (1){
         i++;
-        for(int atual = --i; i <= iterator[i] + atual && i < mxlength; i++){          
+        for(int atual = i; i < iterator[atual] + atual && i < mxlength; i++){          
           answers[k].mailx.name[i] = iterator[i+1];
         }
         if (i+1 >= mxlength) break;
-        answers[k].mailx.name[i-1] = '.';
+        answers[k].mailx.name[i] = '.';
       }
       answers[k].mailx.name[mxlength - 1] = '\0';
     }
