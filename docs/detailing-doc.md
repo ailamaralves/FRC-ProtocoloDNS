@@ -8,7 +8,7 @@ Matheus Amaral Moreira  - 170080307
 
 ## Introdução  
 
-Esse documento tem o intuido de informar e descrever as atividades feitas no decorrer do Trabalho 01 de FRC. Nesse projeto foi desenvolvido um SOCKET
+Esse documento tem o intuido de informar e descrever as atividades feitas no decorrer do Trabalho 01 de FRC. Nesse projeto foi implementado o Protocolo DNS de registro MX apénas do Cliente, tanto a parte de envio da mensagem dns, quanto de tradução da resposta.
 
 ## Sistema operacional
 
@@ -38,7 +38,28 @@ O desenvolvimento da aplicação consistiu nos seguintes desafios:
 * Fazer um algoritmo de tradução dos dados do formato recebido para o formato legível;
 * Responder segundo as expecificações `unb.br <> unb-br.mail.protection.outlook.com`
 
+### Exemplo de mensagem do cliente
+```
+a0 24, 01 00, 00 01, 00 00, 00 00, 00 00, [03 75 6e 62 02 62 72 00], 00 0f, 00 01
+
+Header: a0 24, 01 00, 00 01, 00 00, 00 00, 00 00;
+Query: [03 75 6e 62 02 62 72 00], 00 0f, 00 01;
+```
+
+### Exemplo de resposta do servidor
+```
+a0 24 81 80 00 01 00 01 00 00 00 00 [03 75 6e 62 02 62 72 00] 00 0f 00 01 
+|c0 0c, 00 0f, 00 01, 00 00 34 dd, *00 26*, 00 00, [06 75 6e 62 2d 62 72 04 6d 61 69 6c 0a 70 72 6f 74 65 63 74 69 6f 6e 07 6f 75 74 6c 6f 6f 6b 03 63 6f 6d 00]|
+
+Header: a0 24, 81 80, 00 01, 00 01, 00 00, 00 00;
+
+Query: [03 75 6e 62 02 62 72 00], 00 0f, 00 01;
+
+Anser: |c0 0c, 00 0f, 00 01, 00 00 34 dd, *00 26*, 00 00, [06 75 6e 62 2d 62 72 04 6d 61 69 6c 0a 70 72 6f 74 65 63 74 69 6f 6e 07 6f 75 74 6c 6f 6f 6b 03 63 6f 6d 00]|;
+```
 ## Como executar a aplicação
+
+Abra um terminal na pasta que deseja colocar o trabalho e faça os seguintes passos:
 
 Clonar o repositório:
 
@@ -46,13 +67,13 @@ Clonar o repositório:
 git clone https://github.com/ailamaralves/FRC-ProtocoloDNS.git
 ```
 
-Executar:
+Compilar:
 
 ```
 gcc main.c -o
 ```  
 
-Rodar:
+Executar:
 
 ```
 ./main unb.br 8.8.8.8
@@ -60,11 +81,28 @@ Rodar:
 
 ## Instruções de uso
 
+Estando dentro da pasta do executavel, abra um terminal e digite no formato:
+
+```
+./arquivo_compilado.exe [host_name] [server_IP]
+
+host_name       O nome cuja a resolução se procura
+
+server_IP       O IP do servidor DNS que será consultado
+```
+
+Caso precise dessa tela, degite `-help` na frente do arquivo.
+
 ## Limitações
 
 Algumas dificuldades foram encontradas no decorrer do projeto, já que era uma área nova de produção para ambos da dupla.    
 Inicialmente foi necessário estudar os documentos disponibilizados pelo professor e fazer algumas pesquisas para se familiarizar melhor com o assunto.  
 Outra questão que nos limitou durante o desenvolvimento foi o fato de um dos membros ter tido problema em sua máquina com o GNU/Linux, dificultando na hora de testar e rodar o projeto mas ainda assim com apenas uma máquina para executar deu certo.
+
+### Sobre o limitação de excecução
+
+* O código só será compilado por um sistema GNU/Linux, pois nenhuma versão do Windows possui as bibliotecas <netinet/in.h>, <arpa/inet.h>, <sys/socket.h>, <unistd.h>.
+* É necessário ter interntet.
 
 ## Referências
 

@@ -20,7 +20,7 @@ struct dns_header{
   unsigned short questions_count; 
   unsigned short answer_count; 
   unsigned short authority_count; 
-  unsigned short additional_count; 
+  unsigned short additional_; 
 };
 
 struct query{
@@ -50,6 +50,18 @@ struct answer{
 * */
 
 int main(int argc, char **argv) {
+
+  //-help
+  if(!strcmp("-help", argv[1]) && argc == 2){
+    printf(
+      "\n./arquivo_compilado.exe [host_name] [server_IP]\n\n"
+      "host_name \tO nome cuja a resolucao se procura.\n\n"
+      "server_IP\tO IP do servidor DNS que sera consultado.\n\n"
+      "Options:\n\n"
+      "-help\t\tMostra as informacoes de input.\n\n"
+    );
+    return 0;
+  }
 
   // Socket struct
   struct sockaddr_in server;
@@ -86,7 +98,7 @@ int main(int argc, char **argv) {
   header.questions_count = htons(0x0001);    
   header.answer_count = htons(0x0000); 
   header.authority_count = htons(0x0000);
-  header.additional_count = htons(0x0000); 
+  header.additional_ = htons(0x0000); 
 
   // Transforma de a.com.br para 1a3com2br0
   int count;
@@ -154,26 +166,6 @@ int main(int argc, char **argv) {
     printf("Dominio %s nao possui entrada MX\n", argv[1]);
     exit(-1);
   }
-
-/*
-  a0 24 81 80 00 01 00 01 00 00 00 00 [03 75 6e 62 02 62 72 00] 00 0f 00 01 
-  |c0 0c, 00 0f, 00 01, 00 00 34 dd, *00 26*, 00 00, [06 75 6e 62 2d 62 72 04 6d 61 69 6c 0a 70 
-  72 6f 74 65 63 74 69 6f 6e 07 6f 75 74 6c 6f 6f 6b 03 63 6f 6d 00]|
-
-  1b fd 81 80 00 01 00 05 00 00 00 00 </>[06 67 6f 6f 67 6c 65 03 63 6f 6d 00] 00 0f 00 01 
-  |c0 0c 00 0f 00 01 00 00 01 c3 *00 11* 00 1e [04 61 6c 74 32 <.>05 61 73 70 6d 78 01 6c c0 0c| 
-  |c0 0c 00 0f 00 01 00 00 01 c3 *00 09* 00 28 [04 61 6c 74 33 c0 2f| 
-  |c0 0c 00 0f 00 01 00 00 01 c3 *00 04* 00 0a [c0 2f|
-  |c0 0c 00 0f 00 01 00 00 01 c3 *00 09* 00 32 [04 61 6c 74 34 c0 2f| 
-  |c0 0c 00 0f 00 01 00 00 01 c3 *00 09* 00 14 [04 61 6c 74 31 c0 2f|
-
-  * * = numero de bites na frente
-  [ ] = ascii
-  | | = struct answer
-  </> = c0 0c
-  <.> = c0 2f
-};
-*/
 
   // O iterador percorre a mensagem de resposta ate chegar na area das respostas 
   iterator = (unsigned char*)buffer_in;
