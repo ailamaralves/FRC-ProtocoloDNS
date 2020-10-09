@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
   char buffer_out[BUFFER_LEN];
 
   // Instanciando o socket
-  if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+  if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
     perror("Error on client socket creation:");
     return EXIT_FAILURE;
   }
@@ -136,17 +136,27 @@ int main(int argc, char **argv) {
   memcpy(iterator, &queries.qclass, sizeof(queries.qclass));
   free(domain_name);
 
+  // Associa o socket ao endereço do servidor
+  if (bind(sockfd, (struct sockaddr *) &server, sizeof(server)) == -1){
+    free(queries.name);
+    free(data);
+    close(sockfd);
+    printf("Nao foi possível coletar a entrada MX para %s\n", argv[1]);
+    exit(-1);
+	}
+
+
   // Tentativas de enviar e receber as mensagens do socket
   int attemps = NO_ATTEMPS;
   unsigned int bytes, length;
   do{
     int resp;
     if (resp = sendto(sockfd, data, datalen, 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
-      perror("send");
       free(queries.name);
       free(data);
       close(sockfd);
-      return EXIT_FAILURE;
+      printf("Nao foi possível coletar a entrada MX para %s\n", argv[1]);
+    exit(-1);
     }
     sleep(2);
     bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
@@ -209,15 +219,6 @@ int main(int argc, char **argv) {
     answers[k].preference = buff[0]<<4;
     answers[k].preference += buff[1];
     iterator += 2;
-
-    // Procura cocatenacao
-    memcpy(&buff, iterator + answers[k].datalength - 4, 2);
-    answers[k].mailx.cocat[0] = buff[0];
-    answers[k].mailx.cocat[1] = buff[1];
-    int jump = 0;
-    if(answers[k].mailx.cocat[0] == 192){
-      jump = answers[k].mailx.cocat[1];
-    }
 
     // Algoritimo que traduz a mensagem de 1a3com2br0 para a.com.br
     unsigned short mxlength = answers[k].datalength - 3; 
