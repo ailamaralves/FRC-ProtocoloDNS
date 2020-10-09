@@ -157,7 +157,6 @@ int main(int argc, char **argv) {
     int resp;
     if (resp = sendto(sockfd, data, aswrlen, 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
       perror("send");
-      free(domain_name);
       free(queries.name);
       free(data);
       close(sockfd);
@@ -179,14 +178,12 @@ int main(int argc, char **argv) {
   //printf("\n");
 
   if(bytes == -1){
-    free(domain_name);
     close(sockfd);
     printf("Nao foi possível coletar a entrada MX para %s\n", argv[1]);
     exit(-1);
   }
 
   if(bytes == 12){
-    free(domain_name);
     close(sockfd);
     printf("Dominio %s nao possui entrada MX\n", argv[1]);
     exit(-1);
