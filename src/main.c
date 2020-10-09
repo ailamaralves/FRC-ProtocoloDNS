@@ -8,6 +8,12 @@
 #include <inttypes.h>
 #include <time.h>
  
+#define DNS_PORT 53
+#define NO_ATTEMPS 3
+#define BUFFER_LEN 65536
+#define MX 15
+#define IN 1
+
 struct dns_header{
   unsigned short transaction_ID; 
   unsigned short flags;
@@ -28,16 +34,6 @@ struct mail_exchange{
   unsigned char cocat[2];
 };
 
-// struct answer{
-//   unsigned char name[2];
-//   unsigned char atype[2];
-//   unsigned char aclass[2];
-//   unsigned char time_to_live[4];
-//   unsigned char datalength[2];
-//   unsigned char preference[2];
-//   struct mail_exchange mailx;
-// };
-
 struct answer{
   unsigned short name; 
   unsigned short atype;
@@ -47,13 +43,6 @@ struct answer{
   unsigned short preference;
   struct mail_exchange mailx;
 };
-
-
-#define DNS_PORT 53
-#define NO_ATTEMPS 3
-#define BUFFER_LEN 65536
-#define MX 15
-#define IN 1
 
 /*
 * argv[1]: Nome do domínio buscado
@@ -65,37 +54,33 @@ int main(int argc, char **argv) {
   // Socket struct
   struct sockaddr_in server;
 
-  // File descriptor for socket
+  // File descriptor do socket
   int sockfd;
   int hostlen;
   for(hostlen = 0; argv[1][hostlen] != '\0'; hostlen++);
 
-  // Receive buffer
+  // Buffers
   char buffer_in [BUFFER_LEN];
-  // Send buffer
   char buffer_out[BUFFER_LEN];
 
-  // Instantiate the socket
+  // Instanciando o socket
   if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
     perror("Error on client socket creation:");
     return EXIT_FAILURE;
   }
-  printf("Socket file descriptor ID: %d\n", sockfd);
 
-  // Connection properties
+  // Adicionando as propriedades de conexao
   server.sin_family = AF_INET;
   server.sin_port = htons(DNS_PORT);
   server.sin_addr.s_addr = inet_addr(argv[2]);
   memset(server.sin_zero, 0x0, 8);
   
+  // Instanciando o header segundo as recomendacoes
+  // id = rand(), flag = 0100, questions = 0001 e os demais 0000
   struct dns_header header;
   memset (&header, 0, sizeof(struct dns_header));
-  
-  //segundo as recomendaçoes
-  //id = rand(), flag = 0100, questions = 0001 e os demais 0000
   srand(time(NULL));
   unsigned short rand_id = rand()%65535;  
-
   header.transaction_ID= htons(rand_id);   
   header.flags = htons(0x0100);        
   header.questions = htons(0x0001);    
@@ -103,7 +88,7 @@ int main(int argc, char **argv) {
   header.authority_RRs = htons(0x0000);
   header.additional_RRs = htons(0x0000); 
 
-  //a.com.br 1a3com2br a a. as.com
+  // Transforma de a.com.br para 1a3com2br0
   int count;
   char* domain_name = calloc(hostlen + 2, sizeof(char));
   for(int i = 0; i < hostlen; i++){
@@ -111,51 +96,40 @@ int main(int argc, char **argv) {
     domain_name[i - count] = count;
     strncat(domain_name, argv[1] + (i - count), count);
   }
-  //for(int i = 0; i < hostlen+2; i++){
-  //  printf("%0x ", domain_name[i]);
-  //}
-  //printf("\n");
 
+  // Instanciando a query
   struct query queries;
   queries.name = calloc(hostlen + 2, sizeof(char));
   strcpy(queries.name, domain_name);
   queries.qtype = htons(MX);
   queries.qclass = htons(IN);
 
-  // Zeroing the buffers
+  // Zerar a memoria dos buffers
   memset(buffer_in, 0x0, BUFFER_LEN);
   memset(buffer_out, 0x0, BUFFER_LEN);
 
-
-  unsigned aswrlen = sizeof(header) + (sizeof(domain_name)) +
+  // Instanciando a mensagem que vai ser enviada
+  unsigned datalen = sizeof(header) + (sizeof(domain_name)) +
     sizeof(queries.qtype) + sizeof(queries.qclass);
-  unsigned char* data = calloc(aswrlen, 1);
+  unsigned char* data = calloc(datalen, 1);
   unsigned char* iterator = (unsigned char *) data;
 
+  // Percorrendo o mensagem com um iterador, preenchendo os valores
   memcpy(iterator, &header, sizeof(header));
   iterator += sizeof(header);
   memcpy(iterator, domain_name, sizeof(domain_name));
   iterator += sizeof(domain_name);
-  free(domain_name);
   memcpy(iterator, &queries.qtype, sizeof(queries.qtype));
   iterator += sizeof(queries.qtype);
   memcpy(iterator, &queries.qclass, sizeof(queries.qclass));
+  free(domain_name);
 
-  // memset(buffer_out, (int) data, aswrlen);
-  //for(int i = 0; i < aswrlen; i++){
-  //  printf("%0x ", data[i]);
-  //}
-  //printf("\n");
-
-  // buffer_out = data;
-
-  // Sends the read message to the server through the socket
-
+  // Tentativas de enviar e receber as mensagens do socket
   int attemps = NO_ATTEMPS;
+  unsigned int bytes, length;
   do{
-
     int resp;
-    if (resp = sendto(sockfd, data, aswrlen, 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
+    if (resp = sendto(sockfd, data, datalen, 0, (struct sockaddr *) &server, (socklen_t) sizeof(server)) == -1){
       perror("send");
       free(queries.name);
       free(data);
@@ -163,20 +137,12 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
     sleep(2);
-    // Receives an answer from the server
-    unsigned int bytes, length;
     bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
-
-  }while(bytes == -1 && --attemps > 0 );
-  
+  }while(bytes == -1 && --attemps > 0 );  
   free(queries.name);
   free(data);
-  printf("Server answer: %d\n", bytes);
-  //for(int i = 0; i < bytes; i++){
-  //  printf("%0x ", buffer_in[i]);
-  //}
-  //printf("\n");
 
+  // Mensagens de error
   if(bytes == -1){
     close(sockfd);
     printf("Nao foi possível coletar a entrada MX para %s\n", argv[1]);
@@ -206,49 +172,42 @@ int main(int argc, char **argv) {
   | | = struct answer
   </> = c0 0c
   <.> = c0 2f
-
-
-  struct answer{
-  unsigned short name;
-  unsigned short atype;
-  unsigned short aclass;
-  unsigned int time_to_live;
-  unsigned short datalength;
-  unsigned short preference;
-  struct mail_exchange mailx;
 };
 */
 
-  int n_responses = *(buffer_in+7);
-  n_responses += *(buffer_in+6)<<4;
+  //
   iterator = (unsigned char*)buffer_in;
   iterator += sizeof(struct dns_header);
-  int name_size = 0;
+  // int name_size = 0;
 
-  printf("O iterator é: %0x\n", *(iterator));
+  // Calcula o tamanho do nome da mensagem
+  for(; *iterator != 0; iterator++) ;
+  iterator -= 3;  
 
-  for(; *iterator != 0; name_size++, iterator++) ;
-
-  iterator -= name_size;
-  printf("O iterator é: %0x\n", *(iterator)); // 3
-  printf("Name size: %d\n", name_size); // 7
-  domain_name = calloc(name_size, sizeof(char));
-
-  {
-    int i = -1;
-    while (1){
-      i++;
-      for(int atual = i; i < iterator[atual] + atual && i < name_size; i++){        
-        domain_name[i] = iterator[i+1];
-      }
-      if (i+1 >= name_size) break;
-      domain_name[i] = '.';
-    }
-    domain_name[name_size-1] = '\0';
-  }
-
-  iterator += name_size - 3;
+  // iterator -= name_size;  
+  // domain_name = calloc(name_size, sizeof(char));
+  
+  // {
+  //   int i = -1;
+  //   while (1){
+  //     i++;
+  //     for(int atual = i; i < iterator[atual] + atual && i < name_size; i++){        
+  //       domain_name[i] = iterator[i+1];
+  //     }
+  //     if (i+1 >= name_size) break;
+  //     domain_name[i] = '.';
+  //   }
+  //   domain_name[name_size-1] = '\0';
+  // }
+  // iterator += name_size - 3;
+  
   iterator += sizeof(struct query) - sizeof(char*);
+
+  int n_responses = *(buffer_in+7);
+  n_responses += *(buffer_in+6)<<4;
+
+  // Aqui serao instanciadas as respostas do servidor,
+  // para cada resposta sera preenchido seus campos com base nos dados da resposta
   struct answer answers[n_responses];
   for(int k = 0; k < n_responses; k++){
     unsigned char buff[4];
@@ -256,17 +215,14 @@ int main(int argc, char **argv) {
     answers[k].name = buff[0]<<4;
     answers[k].name += buff[1];
     iterator += 2;
-    printf("Name: %0x\n", (answers[k].name));
     memcpy(&buff, iterator, 2);
     answers[k].atype = buff[0]<<4;
     answers[k].atype += buff[1];
     iterator += 2;
-    printf("Atype: %0x\n", (answers[k].atype));
     memcpy(&buff, iterator, 2);
     answers[k].aclass = buff[0]<<4;
     answers[k].aclass += buff[1];
     iterator += 2;
-    printf("Aclass: %0x\n", (answers[k].aclass));
     memcpy(&buff, iterator, 4);
     answers[k].time_to_live[1] = buff[0]<<4;
     answers[k].time_to_live[1] += buff[1];
@@ -282,18 +238,17 @@ int main(int argc, char **argv) {
     answers[k].preference += buff[1];
     iterator += 2;
 
+    // Procura cocatenacao
     memcpy(&buff, iterator + answers[k].datalength - 4, 2);
-
     answers[k].mailx.cocat[0] = buff[0];
     answers[k].mailx.cocat[1] = buff[1];
-
     int jump = 0;
     if(answers[k].mailx.cocat[0] == 192){
       jump = answers[k].mailx.cocat[1];
     }
 
-    unsigned short mxlength = answers[k].datalength - 3; //16^2 = 256
-
+    // Algoritimo que traduz a mensagem de 1a3com2br0 para a.com.br
+    unsigned short mxlength = answers[k].datalength - 3; 
     answers[k].mailx.name = calloc(mxlength, sizeof(char));
     {
       int i = -1;
@@ -308,20 +263,11 @@ int main(int argc, char **argv) {
       answers[k].mailx.name[mxlength - 1] = '\0';
     }
 
-    printf("MX: ");
-    for(int i = 0; i < mxlength; i++){
-    printf("%0x ", answers[k].mailx.name[i]);
-    }
-    printf("\n");
-
-    printf("%s <> %s", domain_name, answers[k].mailx.name);
-    printf("\n");
+    // Saida de cada resposta traduzida do servidor
+    printf("%s <> %s\n", argv[1], answers[k].mailx.name);
     free(answers[k].mailx.name);
   }
-
-  free(domain_name);
+  // free(domain_name);
   close(sockfd);
-
-
   return 0;
 }
