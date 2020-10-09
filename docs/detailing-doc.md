@@ -12,7 +12,7 @@ Esse documento tem o intuido de informar e descrever as atividades feitas no dec
 
 ## Sistema operacional
 
-De acordo como o que foi passado no roteiro do trabalho, concluímos que o modo mais eficaz, baseado no conhecimento da dupla, seria fazer o projeto em Linguagem C com as bibliotecas do GNU/Linux.
+De acordo como o que foi passado no roteiro do trabalho, concluímos que o modo mais eficaz, baseado no conhecimento da dupla, seria fazer o projeto em Linguagem C com as bibliotecas do GNU/Linux, no caso o Ubuntu. Porém, com algumas limitações de um dos integrantes, foi necessário utilizar o Windows 10 também.
 
 ## Ambiente de desenvolvimento
 
@@ -27,6 +27,16 @@ Para o desenvolvimento do projeto foram utilizadas as ferramentas listadas na ta
 **Wireshark** | Usado para analisar e entender os tráfegos de rede e a organização dos protocolos.
 
 ## Construção da aplicação
+
+O desenvolvimento da aplicação consistiu nos seguintes desafios:
+* Construção e formatação dos dados DNS MX segundo a RFC 1035, Page: 25;
+    * Header: ID (2 bytes); Flags (2 bytes); Questions Count (2 bytes); Answer Count (2 bytes); Authority Count (2 bytes); Additional Count (2 bytes).
+    * Question: Question Name (tamanho da mensagem + 1 bytes); Question Type (2 bytes); Question Class (2 bytes).
+    * Answer: Name (2 bytes); Type (2 bytes); Class (2 bytes); Time To Live (4 bytes); Data Length (2 bytes); Preference (2 bytes); MX Data (Data Length - 2 bytes). 
+* Estabelecer conexão com o socket, o envio <sendto()> e a recepção <recvfrom()> usando o protocolo UPD;
+* Fazer um algoritmo de tradução dos dados para o formato de envio;
+* Fazer um algoritmo de tradução dos dados do formato recebido para o formato legível;
+* Responder segundo as expecificações `unb.br <> unb-br.mail.protection.outlook.com`
 
 ## Como executar a aplicação
 

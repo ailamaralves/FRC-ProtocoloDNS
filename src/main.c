@@ -17,10 +17,10 @@
 struct dns_header{
   unsigned short transaction_ID; 
   unsigned short flags;
-  unsigned short questions; 
-  unsigned short answer_RRs; 
-  unsigned short authority_RRs; 
-  unsigned short additional_RRs; 
+  unsigned short questions_count; 
+  unsigned short answer_count; 
+  unsigned short authority_count; 
+  unsigned short additional_count; 
 };
 
 struct query{
@@ -76,17 +76,17 @@ int main(int argc, char **argv) {
   memset(server.sin_zero, 0x0, 8);
   
   // Instanciando o header segundo as recomendacoes
-  // id = rand(), flag = 0100, questions = 0001 e os demais 0000
+  // id = rand(), flag = 0100, questions_count = 0001 e os demais 0000
   struct dns_header header;
   memset (&header, 0, sizeof(struct dns_header));
   srand(time(NULL));
   unsigned short rand_id = rand()%65535;  
   header.transaction_ID= htons(rand_id);   
   header.flags = htons(0x0100);        
-  header.questions = htons(0x0001);    
-  header.answer_RRs = htons(0x0000); 
-  header.authority_RRs = htons(0x0000);
-  header.additional_RRs = htons(0x0000); 
+  header.questions_count = htons(0x0001);    
+  header.answer_count = htons(0x0000); 
+  header.authority_count = htons(0x0000);
+  header.additional_count = htons(0x0000); 
 
   // Transforma de a.com.br para 1a3com2br0
   int count;
