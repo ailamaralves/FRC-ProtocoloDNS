@@ -175,34 +175,14 @@ int main(int argc, char **argv) {
 };
 */
 
-  //
+  // O iterador percorre a mensagem de resposta ate chegar na area das respostas 
   iterator = (unsigned char*)buffer_in;
   iterator += sizeof(struct dns_header);
-  // int name_size = 0;
-
-  // Calcula o tamanho do nome da mensagem
   for(; *iterator != 0; iterator++) ;
   iterator -= 3;  
-
-  // iterator -= name_size;  
-  // domain_name = calloc(name_size, sizeof(char));
-  
-  // {
-  //   int i = -1;
-  //   while (1){
-  //     i++;
-  //     for(int atual = i; i < iterator[atual] + atual && i < name_size; i++){        
-  //       domain_name[i] = iterator[i+1];
-  //     }
-  //     if (i+1 >= name_size) break;
-  //     domain_name[i] = '.';
-  //   }
-  //   domain_name[name_size-1] = '\0';
-  // }
-  // iterator += name_size - 3;
-  
   iterator += sizeof(struct query) - sizeof(char*);
 
+  // Acesso direto as Anser RRs
   int n_responses = *(buffer_in+7);
   n_responses += *(buffer_in+6)<<4;
 
