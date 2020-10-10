@@ -8,7 +8,7 @@ Matheus Amaral Moreira  - 170080307
 
 ## Introdução  
 
-Esse documento tem o intuido de informar e descrever as atividades feitas no decorrer do Trabalho 01 de FRC. Nesse projeto foi implementado o Protocolo DNS de registro MX apenas do Cliente, tanto a parte de envio da mensagem DNS, quanto de tradução da resposta.
+Este documento tem o intuito de informar e descrever as atividades feitas no decorrer do Trabalho 01 de FRC. Nesse projeto foi implementado o Protocolo DNS de registro MX apenas do Cliente, tanto a parte de envio da mensagem DNS, quanto de tradução da resposta.
 
 ## Sistema operacional
 
@@ -22,7 +22,7 @@ Para o desenvolvimento do projeto foram utilizadas as ferramentas listadas na ta
  ----|:---
 **GitHub** | Essa plataforma foi utilizada para armazenamento, integração e controle de versões trabalho.
 **Discord** | O Discord foi útil para a dupla realizar o pareamento durante a programação, através de chamadas devido ao afastamento social já que os integrantes não poderiam se encontrar.
-**WhatsApp** | Para cominicação mais rápida, marcar horário para reunir e passar qualquer informação que aparecer sobre o projeto.
+**WhatsApp** | Para comunicação mais rápida, marcar horário para reunir e passar qualquer informação que aparecer sobre o projeto.
 **Visual Studio Code / CLion**| IDE's utilizadas no desenvolvimento da documentação e código.
 **Wireshark** | Usado para analisar e entender os tráfegos de rede e a organização dos protocolos.
 
@@ -86,7 +86,7 @@ Executar:
 
 ## Instruções de uso
 
-Estando dentro da pasta do executavel, abra um terminal e digite no formato:
+Estando dentro da pasta do executável, abra um terminal e digite no formato:
 
 ```
 ./arquivo_compilado.exe [host_name] [server_IP]
@@ -96,7 +96,7 @@ host_name       O nome cuja a resolução se procura
 server_IP       O IP do servidor DNS que será consultado
 ```
 
-Caso precise dessa tela, degite `-help` na frente do arquivo.
+Caso precise dessa tela, digite `-help` na frente do arquivo.
 
 ## Resultados possíveis 
 
@@ -118,10 +118,10 @@ Algumas dificuldades foram encontradas no decorrer do projeto, já que era uma �
 Inicialmente foi necessário estudar os documentos disponibilizados pelo professor e fazer algumas pesquisas para se familiarizar melhor com o assunto.  
 Outra questão que nos limitou durante o desenvolvimento foi o fato de um dos membros ter tido problema em sua máquina com o GNU/Linux, dificultando na hora de testar e rodar o projeto mas ainda assim com apenas uma máquina para executar deu certo.
 
-### Limitação de excecução
+### Limitação de execução
 
 * O código só será compilado por um sistema GNU/Linux, pois nenhuma versão do Windows possui as bibliotecas <netinet/in.h>, <arpa/inet.h>, <sys/socket.h>, <unistd.h>.
-* É necessário ter interntet.
+* É necessário ter internet.
 
 ## Observações
 
