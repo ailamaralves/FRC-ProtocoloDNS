@@ -20,7 +20,7 @@ struct dns_header{
   unsigned short questions_count; 
   unsigned short answer_count; 
   unsigned short authority_count; 
-  unsigned short additional_; 
+  unsigned short additional_count; 
 };
 
 struct query{
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
   header.questions_count = htons(0x0001);    
   header.answer_count = htons(0x0000); 
   header.authority_count = htons(0x0000);
-  header.additional_ = htons(0x0000); 
+  header.additional_count = htons(0x0000); 
 
   // Transforma de a.com.br para 1a3com2br0
   int count;
@@ -153,8 +153,6 @@ int main(int argc, char **argv) {
   free(queries.name);
   free(data);
 
-  for(int i = 0; i < bytes; i++)
-    printf("%0x ", buffer_in[i]);
   // Mensagens de error
   if(bytes == -1){
     close(sockfd);
