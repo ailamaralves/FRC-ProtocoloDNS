@@ -103,9 +103,11 @@ Caso precise dessa tela, degite `-help` na frente do arquivo.
 - Resolução bem sucedida 
 ![UnbServer](./imgs/unbbrfunc.png)
 <br/>
+
 - Resolução com falha: nome de domínio não existe ou não foi encontrado
 ![domServer](./imgs/errodom.png)
 <br/>
+
 - Resolução com falha: domínio não possui entrada MX
 ![portServer](./imgs/erroport.png)
 
