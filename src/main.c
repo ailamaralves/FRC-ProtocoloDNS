@@ -85,7 +85,6 @@ int main(int argc, char **argv) {
   server.sin_family = AF_INET;
   server.sin_port = htons(DNS_PORT);
   server.sin_addr.s_addr = inet_addr(argv[2]);
-  memset(server.sin_zero, 0x0, 8);
   
   // Instanciando o header segundo as recomendacoes
   // id = rand(), flag = 0100, questions_count = 0001 e os demais 0000
@@ -136,16 +135,6 @@ int main(int argc, char **argv) {
   memcpy(iterator, &queries.qclass, sizeof(queries.qclass));
   free(domain_name);
 
-  // Associa o socket ao endereço do servidor
-  if (bind(sockfd, (struct sockaddr *) &server, sizeof(server)) == -1){
-    free(queries.name);
-    free(data);
-    close(sockfd);
-    printf("Nao foi possível coletar a entrada MX para %s\n", argv[1]);
-    exit(-1);
-	}
-
-
   // Tentativas de enviar e receber as mensagens do socket
   int attemps = NO_ATTEMPS;
   unsigned int bytes, length;
@@ -156,7 +145,7 @@ int main(int argc, char **argv) {
       free(data);
       close(sockfd);
       printf("Nao foi possível coletar a entrada MX para %s\n", argv[1]);
-    exit(-1);
+      exit(-1);
     }
     sleep(2);
     bytes = recvfrom (sockfd, buffer_in, BUFFER_LEN, MSG_DONTWAIT, (struct sockaddr *) &server, (socklen_t*)&length);
@@ -164,6 +153,8 @@ int main(int argc, char **argv) {
   free(queries.name);
   free(data);
 
+  for(int i = 0; i < bytes; i++)
+    printf("%0x ", buffer_in[i]);
   // Mensagens de error
   if(bytes == -1){
     close(sockfd);
@@ -240,7 +231,6 @@ int main(int argc, char **argv) {
     printf("%s <> %s\n", argv[1], answers[k].mailx.name);
     free(answers[k].mailx.name);
   }
-  // free(domain_name);
   close(sockfd);
   return 0;
 }
